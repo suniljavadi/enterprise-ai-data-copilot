@@ -35,6 +35,7 @@ class Settings(BaseSettings):
         '"dev-analyst-key": {"name": "dev-analyst", "role": "analyst"}, '
         '"dev-viewer-key": {"name": "dev-viewer", "role": "viewer"}}'
     )
+    public_demo_key: str | None = None
 
     @property
     def excluded_schema_list(self) -> list[str]:

@@ -40,6 +40,10 @@ def _load_api_key_directory() -> dict[str, Principal]:
     directory: dict[str, Principal] = {}
     for api_key, info in raw.items():
         directory[api_key] = Principal(api_key=api_key, name=info["name"], role=Role(info["role"]))
+    if settings.public_demo_key:
+        directory[settings.public_demo_key] = Principal(
+            api_key=settings.public_demo_key, name="public-demo", role=Role.VIEWER
+        )
     return directory
 
 

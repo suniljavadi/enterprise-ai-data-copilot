@@ -13,6 +13,7 @@ def _config(key: str, default: str = "") -> str:
 
 
 API_BASE_URL = _config("API_BASE_URL", "http://localhost:8000")
+PUBLIC_DEMO_VIEWER_KEY = "demo-viewer-2026"
 
 st.set_page_config(page_title="Enterprise AI Data Copilot", layout="wide")
 st.title("Enterprise AI Data Copilot")
@@ -77,7 +78,7 @@ def render_feedback(query_id: int | None) -> None:
                 st.warning("Feedback could not be recorded")
 
 
-tab_data, tab_docs, tab_agent = st.tabs(["Ask Data", "Ask Documents", "Agent Mode"])
+tab_data, tab_docs, tab_agent, tab_demo = st.tabs(["Ask Data", "Ask Documents", "Agent Mode", "Demo Access"])
 
 with tab_data:
     st.subheader("Ask a question about your business data")
@@ -152,3 +153,9 @@ with tab_agent:
                 if body["errors"]:
                     st.warning("\n".join(body["errors"]))
                 st.caption(f"Execution time: {body['execution_time_ms']} ms")
+
+with tab_demo:
+    st.subheader("Public Demo Access")
+    st.info("This Viewer key is intentionally public for testing the demo with synthetic data.")
+    st.code(PUBLIC_DEMO_VIEWER_KEY)
+    st.caption("It can ask business and document questions, but cannot access schema, raw SQL, or management actions.")
