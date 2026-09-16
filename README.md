@@ -2,6 +2,8 @@
 
 An AI assistant that lets users query enterprise data (SQL Server) and internal documents in natural language, with deterministic safety controls around every model-generated action.
 
+**Live API**: https://enterprise-ai-copilot-api.orangesky-0c279ec4.centralindia.azurecontainerapps.io (Azure Container Apps, free consumption tier, backed by a free-tier serverless Azure SQL Database in Central India). Note: the serverless database auto-pauses after ~60 minutes idle — the first request after a pause takes 30-60s to resume.
+
 Three capabilities, one architecture:
 - **Text-to-SQL** — natural language → validated, read-only SQL → real query results → explanation
 - **Enterprise RAG** — natural language → retrieved document evidence → grounded answer with citations
