@@ -16,6 +16,7 @@ API_BASE_URL = _config("API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="Enterprise AI Data Copilot", layout="wide")
 st.title("Enterprise AI Data Copilot")
+st.caption("Ask Data for business metrics, Ask Documents for policies, or Agent Mode for questions that need both.")
 
 with st.sidebar:
     st.subheader("Access")
@@ -106,7 +107,7 @@ with tab_data:
 
 with tab_docs:
     st.subheader("Ask a question about indexed documents")
-    if st.button("Re-index documents", key="rag_ingest"):
+    if st.button("Re-index documents (Admin only)", key="rag_ingest", help="Only admin access keys can refresh the document index."):
         status, body = call_api("POST", "/rag/ingest")
         if status == 200:
             st.success(f"Indexed {body['total_chunks']} chunk(s) across {len(body['documents_indexed'])} document(s)")
