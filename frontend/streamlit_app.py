@@ -3,7 +3,16 @@ import os
 import requests
 import streamlit as st
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+
+def _config(key: str, default: str = "") -> str:
+    """Reads from Streamlit Cloud secrets first, then falls back to env vars (local/Docker)."""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError, st.errors.StreamlitAPIException):
+        return os.getenv(key, default)
+
+
+API_BASE_URL = _config("API_BASE_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="Enterprise AI Data Copilot", layout="wide")
 st.title("Enterprise AI Data Copilot")
@@ -11,7 +20,7 @@ st.title("Enterprise AI Data Copilot")
 with st.sidebar:
     st.subheader("Access")
     api_key = st.text_input(
-        "API Key", value=os.getenv("API_KEY", ""), type="password",
+        "API Key", value=_config("API_KEY", ""), type="password",
         help="Determines your role (admin/analyst/viewer). See .env.example for local dev keys.",
     )
 
