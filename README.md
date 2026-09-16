@@ -4,6 +4,8 @@ An AI assistant that lets users query enterprise data (SQL Server) and internal 
 
 **Live API**: https://enterprise-ai-copilot-api.orangesky-0c279ec4.centralindia.azurecontainerapps.io (Azure Container Apps, free consumption tier, backed by a free-tier serverless Azure SQL Database in Central India). Note: the serverless database auto-pauses after ~60 minutes idle — the first request after a pause takes 30-60s to resume.
 
+**Live UI**: https://enterprise-ai-data-copilot-tgcpcmtgj4crhyndhaeugu.streamlit.app/ (Streamlit Community Cloud, talks to the Azure-hosted API above)
+
 Three capabilities, one architecture:
 - **Text-to-SQL** — natural language → validated, read-only SQL → real query results → explanation
 - **Enterprise RAG** — natural language → retrieved document evidence → grounded answer with citations
