@@ -26,12 +26,11 @@ with st.sidebar:
     )
     with st.expander("How to access this app"):
         st.markdown(
-            "**Hosted app**\n\n"
-            "Use a deployment access key provided by the app owner. Local `dev-...` keys do not work here.\n\n"
-            "**Local development**\n\n"
-            "Copy `.env.example` to `.env`, then use its `dev-viewer-key`, `dev-analyst-key`, or `dev-admin-key`.\n\n"
-            "**Invalid API key?**\n\n"
-            "Check that you used the correct environment's key and that no spaces were copied before or after it."
+            "This is a role-based application. To use it, request an access key from the app owner for the role "
+            "you need: **Viewer** for business questions, **Analyst** for data and schema tools, or **Admin** for "
+            "management actions.\n\n"
+            "If your key is rejected, confirm that you received the correct role-based key and that it was copied "
+            "without extra spaces."
         )
     st.caption("Use the least-privileged key for your task. Never share access keys in questions or screenshots.")
 
@@ -51,8 +50,8 @@ def render_api_error(status: int, body: dict) -> None:
     if status == 401:
         st.error("Access key not recognized")
         st.info(
-            "This hosted app requires a deployment access key. Local `dev-...` keys work only when running the "
-            "project locally. Check for copied spaces, then ask the app owner for the correct hosted-app key."
+            "This is a role-based application. Ask the app owner for an access key that matches the role you need, "
+            "then check that it was copied without extra spaces."
         )
     elif status == 403:
         st.error("Your access key does not have permission for this action")
