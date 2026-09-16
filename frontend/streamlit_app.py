@@ -36,15 +36,6 @@ with st.sidebar:
             "without extra spaces."
         )
     st.caption("Use the least-privileged key for your task. Never share access keys in questions or screenshots.")
-   with st.expander("How to access this app"):
-        st.markdown(
-            "This is a role-based application. To use it, request an access key from the app owner for the role "
-            "you need: **Viewer** for business questions, **Analyst** for data and schema tools, or **Admin** for "
-            "management actions.\n\n"
-            "If your key is rejected, confirm that you received the correct role-based key and that it was copied "
-            "without extra spaces."
-        )
-    st.caption("Use the least-privileged key for your task. Never share access keys in questions or screenshots.")
 
 
 def call_api(method: str, path: str, json: dict | None = None) -> tuple[int, dict]:
