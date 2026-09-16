@@ -2,6 +2,14 @@
 
 Real issues encountered building this project, and how they were diagnosed and fixed — kept here as a record, not hypothetical guidance.
 
+## `tests/unit` silently required a live SQL Server connection in hosted CI
+
+**Symptom**: The first push to GitHub Actions failed at the "Unit tests (no database required)" step with `pyodbc.Error: Can't open lib 'ODBC Driver 17 for SQL Server' : file not found` — even though the CI workflow explicitly only runs `tests/unit`, which is supposed to have no database dependency.
+
+**Cause**: `tests/unit/test_schema_retriever.py` called `select_relevant_tables(question)` without passing a `snapshot`, so it silently fell through to `get_cached_schema()`, which tries to connect to a real SQL Server. This worked locally (a real `SalesAI_DB` and ODBC driver are present) but broke on the hosted runner, which has neither. The test was misclassified as a pure unit test when it actually had a hidden integration dependency.
+
+**Fix**: Rewrote the test to construct a fake in-memory `SchemaSnapshot` (via `SchemaSnapshot`/`TableMetadata`/`ColumnMetadata`) and pass it explicitly to `select_relevant_tables(question, snapshot=...)`. Verified the fix by setting `SQL_SERVER` to an unreachable host locally and confirming `tests/unit` still passes in under a second — then verified again for real by watching the actual GitHub Actions run turn green.
+
 ## Schema retriever missed tables for business-vocabulary questions
 
 **Symptom**: "What is the total revenue?" answered correctly but `tables_used` came back empty in the UI, since no schema/table/column literally contains the token "revenue" (the actual column is `TotalAmount`).
