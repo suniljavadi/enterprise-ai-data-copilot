@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote
 
 import requests
 import streamlit as st
@@ -14,6 +15,7 @@ def _config(key: str, default: str = "") -> str:
 
 API_BASE_URL = _config("API_BASE_URL", "http://localhost:8000")
 PUBLIC_DEMO_VIEWER_KEY = "demo-viewer-2026"
+ACCESS_REQUEST_EMAIL = "javadisunil@gmail.com"
 
 st.set_page_config(page_title="Enterprise AI Data Copilot", layout="wide")
 st.title("Enterprise AI Data Copilot")
@@ -78,7 +80,9 @@ def render_feedback(query_id: int | None) -> None:
                 st.warning("Feedback could not be recorded")
 
 
-tab_data, tab_docs, tab_agent, tab_demo = st.tabs(["Ask Data", "Ask Documents", "Agent Mode", "Demo Access"])
+tab_data, tab_docs, tab_agent, tab_demo, tab_request = st.tabs(
+    ["Ask Data", "Ask Documents", "Agent Mode", "Demo Access", "Request Access"]
+)
 
 with tab_data:
     st.subheader("Ask a question about your business data")
@@ -159,3 +163,30 @@ with tab_demo:
     st.info("This Viewer key is intentionally public for testing the demo with synthetic data.")
     st.code(PUBLIC_DEMO_VIEWER_KEY)
     st.caption("It can ask business and document questions, but cannot access schema, raw SQL, or management actions.")
+
+with tab_request:
+    st.subheader("Request Role-Based Access")
+    st.write("Request an access key for the role you need. The app owner reviews each request before issuing a key.")
+    with st.form("access_request_form"):
+        requester_name = st.text_input("Name")
+        requester_email = st.text_input("Email address")
+        requested_role = st.selectbox(
+            "Requested role",
+            ["Viewer - business questions", "Analyst - data and schema tools", "Admin - management actions"],
+        )
+        request_reason = st.text_area("Why do you need access?", placeholder="Briefly describe your testing or business need.")
+        request_submitted = st.form_submit_button("Prepare Access Request")
+
+    if request_submitted:
+        if not requester_name.strip() or "@" not in requester_email or not request_reason.strip():
+            st.error("Enter your name, a valid email address, and a brief reason for access.")
+        else:
+            subject = quote(f"Enterprise AI Data Copilot access request - {requested_role.split(' - ')[0]}")
+            body = quote(
+                f"Name: {requester_name.strip()}\n"
+                f"Email: {requester_email.strip()}\n"
+                f"Requested role: {requested_role}\n\n"
+                f"Reason for access:\n{request_reason.strip()}"
+            )
+            st.success("Your request is ready to send to the app owner.")
+            st.link_button("Email Access Request", f"mailto:{ACCESS_REQUEST_EMAIL}?subject={subject}&body={body}")
