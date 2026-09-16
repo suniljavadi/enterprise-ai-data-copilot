@@ -4,6 +4,7 @@ from app.main import app
 from app.rag.retriever import ingest_directory, reset_index
 
 client = TestClient(app)
+client.headers.update({"X-API-Key": "dev-admin-key"})
 
 
 def setup_module():

@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 client = TestClient(app)
+client.headers.update({"X-API-Key": "dev-admin-key"})
 
 
 def test_feedback_round_trip_after_query():

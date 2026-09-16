@@ -87,6 +87,7 @@ See [.env.example](.env.example). Key ones:
 | `LLM_API_KEY` | Optional. If unset, the app uses a deterministic mock LLM provider (no external calls, no cost) |
 | `SQL_QUERY_TIMEOUT`, `MAX_RESULT_ROWS` | Bound every generated query's execution time and result size |
 | `SCHEMA_CACHE_TTL_SECONDS` | How long schema metadata is cached before re-inspection |
+| `API_KEYS` | JSON map of API key → role (`admin`/`analyst`/`viewer`). Ships with dev-only defaults — override before any shared deployment |
 
 ## SQL Server Configuration
 
@@ -94,18 +95,32 @@ The app connects independently to your `SalesAI_DB` (or any SQL Server database)
 
 ## API Examples
 
+Every route except `GET /health` requires an `X-API-Key` header (see [Authentication & Roles](#authentication--roles)):
+
 ```bash
-curl -X POST http://localhost:8000/sql/query -H "Content-Type: application/json" \
+curl -X POST http://localhost:8000/sql/query -H "Content-Type: application/json" -H "X-API-Key: dev-viewer-key" \
   -d '{"question": "What is the total revenue?"}'
 
-curl -X POST http://localhost:8000/rag/query -H "Content-Type: application/json" \
+curl -X POST http://localhost:8000/rag/query -H "Content-Type: application/json" -H "X-API-Key: dev-viewer-key" \
   -d '{"question": "What is the refund policy for damaged products?"}'
 
-curl -X POST http://localhost:8000/agent/query -H "Content-Type: application/json" \
+curl -X POST http://localhost:8000/agent/query -H "Content-Type: application/json" -H "X-API-Key: dev-viewer-key" \
   -d '{"question": "Why did revenue decrease and what is the refund policy?"}'
 ```
 
 Full interactive docs at `http://localhost:8000/docs` (FastAPI auto-generated OpenAPI).
+
+## Authentication & Roles
+
+See [docs/security.md](docs/security.md#role-based-access-control-appcoresecuritypy) for the full permission matrix. Summary:
+
+| Role | Access |
+|---|---|
+| `viewer` | Curated Q&A only: `/sql/query`, `/rag/query`, `/agent/query`, `/feedback` |
+| `analyst` | + raw SQL tools (`/sql/generate`, `/sql/execute`), `/schema`, `/health/database` |
+| `admin` | + data management (`/schema/refresh`, `/rag/ingest`) |
+
+Dev keys (`dev-admin-key`/`dev-analyst-key`/`dev-viewer-key`) are in `.env.example` for local testing only.
 
 ## Evaluation Methodology
 
@@ -113,7 +128,7 @@ See [docs/evaluation.md](docs/evaluation.md). Summary: 38 Text-to-SQL cases acro
 
 ## Security
 
-See [docs/security.md](docs/security.md). Core principle: LLM output is untrusted input. Every generated SQL string is parsed with `sqlglot` and must be a single `SELECT`/`WITH` statement referencing no system schemas or dangerous functions before it ever reaches the database.
+See [docs/security.md](docs/security.md). Core principles: LLM output is untrusted input (every generated SQL string is parsed with `sqlglot` and must be a single `SELECT`/`WITH` statement referencing no system schemas or dangerous functions before it ever reaches the database), and every route is role-gated via `X-API-Key` — see [Authentication & Roles](#authentication--roles).
 
 ## Observability
 

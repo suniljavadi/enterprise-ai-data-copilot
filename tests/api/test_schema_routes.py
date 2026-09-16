@@ -4,6 +4,7 @@ from app.database.inspector import clear_schema_cache
 from app.main import app
 
 client = TestClient(app)
+client.headers.update({"X-API-Key": "dev-admin-key"})
 
 
 def setup_function():

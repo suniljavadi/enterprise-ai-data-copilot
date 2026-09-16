@@ -8,10 +8,20 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 st.set_page_config(page_title="Enterprise AI Data Copilot", layout="wide")
 st.title("Enterprise AI Data Copilot")
 
+with st.sidebar:
+    st.subheader("Access")
+    api_key = st.text_input(
+        "API Key", value=os.getenv("API_KEY", ""), type="password",
+        help="Determines your role (admin/analyst/viewer). See .env.example for local dev keys.",
+    )
+
 
 def call_api(method: str, path: str, json: dict | None = None) -> tuple[int, dict]:
     try:
-        response = requests.request(method, f"{API_BASE_URL}{path}", json=json, timeout=60)
+        response = requests.request(
+            method, f"{API_BASE_URL}{path}", json=json, timeout=60,
+            headers={"X-API-Key": api_key} if api_key else {},
+        )
         return response.status_code, response.json()
     except requests.RequestException as exc:
         return 0, {"detail": f"Could not reach API at {API_BASE_URL}: {exc}"}

@@ -8,6 +8,22 @@
 LLM suggestion (untrusted) → deterministic validator (allow-list) → bounded execution
 ```
 
+## Role-based access control (`app/core/security.py`)
+
+Every route except `GET /health` (used by load balancers/container health checks and must stay reachable without credentials) requires an `X-API-Key` header. Keys map to one of three roles via `API_KEYS` (JSON, config-driven — never hardcoded):
+
+| Role | Can do |
+|---|---|
+| `viewer` | Curated, safe read paths only: `POST /sql/query`, `POST /rag/query`, `POST /agent/query`, `POST /feedback` |
+| `analyst` | Everything `viewer` can, plus power-user raw-SQL tools: `POST /sql/generate`, `POST /sql/execute`, `GET /schema`, `GET /health/database` |
+| `admin` | Everything `analyst` can, plus data-management actions: `POST /schema/refresh`, `POST /rag/ingest` |
+
+Enforcement is a FastAPI dependency (`require_role(*roles)`) applied per-route via `dependencies=[Depends(...)]` — the permission check happens before the request handler runs, so a rejected request never touches business logic. Missing/invalid keys return `401`; a valid key with the wrong role returns `403` — never a generic 500 that could leak which resource exists.
+
+Verified in `tests/api/test_rbac.py` (19 cases): every role/endpoint combination in the matrix above, plus missing-key and invalid-key rejection.
+
+**Local dev defaults** (`dev-admin-key`/`dev-analyst-key`/`dev-viewer-key`, see `.env.example`) must be overridden with unique secret keys before any shared/production deployment — the config comment says so explicitly.
+
 ## SQL validation (`app/text_to_sql/validator.py`)
 
 Uses `sqlglot` to parse a real AST (`read="tsql"` dialect) rather than regex string matching. Rejects:

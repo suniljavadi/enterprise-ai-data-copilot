@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     schema_cache_ttl_seconds: int = 300
     excluded_schemas: str = "dbo,sys,INFORMATION_SCHEMA,guest"
 
+    # Role-based access control. JSON map of API key -> {"name": ..., "role": "admin"|"analyst"|"viewer"}.
+    # The default below is for local development / tests only — override API_KEYS in production.
+    api_keys: str = (
+        '{"dev-admin-key": {"name": "dev-admin", "role": "admin"}, '
+        '"dev-analyst-key": {"name": "dev-analyst", "role": "analyst"}, '
+        '"dev-viewer-key": {"name": "dev-viewer", "role": "viewer"}}'
+    )
+
     @property
     def excluded_schema_list(self) -> list[str]:
         return [item.strip() for item in self.excluded_schemas.split(",") if item.strip()]

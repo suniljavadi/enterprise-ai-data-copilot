@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.core.security import Role, require_role
 from app.rag.pipeline import RAGResult, answer_query
 from app.rag.retriever import get_vector_store, ingest_directory
 
@@ -17,12 +18,12 @@ class IngestResponse(BaseModel):
     total_chunks: int
 
 
-@router.post("/ingest", response_model=IngestResponse)
+@router.post("/ingest", response_model=IngestResponse, dependencies=[Depends(require_role(Role.ADMIN))])
 def ingest() -> IngestResponse:
     documents = ingest_directory()
     return IngestResponse(documents_indexed=documents, total_chunks=get_vector_store().size)
 
 
-@router.post("/query", response_model=RAGResult)
+@router.post("/query", response_model=RAGResult, dependencies=[Depends(require_role(Role.ADMIN, Role.ANALYST, Role.VIEWER))])
 def query(request: RAGQueryRequest) -> RAGResult:
     return answer_query(request.question, top_k=request.top_k)
