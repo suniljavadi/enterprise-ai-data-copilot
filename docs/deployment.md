@@ -4,7 +4,7 @@
 
 ```powershell
 pip install -r requirements.txt
-copy .env.example .env
+# Configure local settings in the shell or your local environment manager.
 uvicorn app.main:app --reload
 streamlit run frontend/streamlit_app.py
 ```
@@ -15,6 +15,9 @@ streamlit run frontend/streamlit_app.py
 docker build -t enterprise-ai-data-copilot .
 docker run -p 8000:8000 --env-file .env -e SQL_SERVER=host.docker.internal --add-host=host.docker.internal:host-gateway enterprise-ai-data-copilot
 ```
+
+The image sets `APP_ENV=production`; provide production-only `API_KEYS` and `LLM_API_KEY` plus SQL Server authentication settings before starting it. Startup intentionally fails if API keys still use development defaults or the LLM would fall back to the mock provider.
+The Docker build context excludes local environment files so they are not sent to the image builder.
 
 Verified: image builds on `python:3.11-slim-bookworm`, installs Microsoft ODBC Driver 17 via the modern GPG-keyring method (not the deprecated `apt-key`), runs as non-root `appuser`, and reports `healthy` via `HEALTHCHECK` hitting `/health`.
 
@@ -40,7 +43,7 @@ What's actually running:
 - **Azure SQL Database**: `SalesAI_DB` on a free-tier serverless database (`GP_S_Gen5_2`, `useFreeLimit: true`, `AutoPause` behavior — genuinely $0 within the monthly free limit), region Central India. Full schema + data replicated from local via the same two SQL scripts used for local setup.
 - **Azure Container Apps**: Consumption plan (free monthly grant: 180,000 vCPU-seconds + 360,000 GiB-seconds), `min-replicas 0` (scales to zero when idle), pulling the image from **GitHub Container Registry** (`ghcr.io/suniljavadi/enterprise-ai-data-copilot-api`) rather than Azure Container Registry, to avoid ACR's ~$5/month Basic-tier cost.
 - Authentication uses `SQL_TRUSTED_CONNECTION=false` with a dedicated `sqladmin` SQL login, since Linux containers can't use Windows Authentication (see below).
-- Production API keys (`API_KEYS` env var) are distinct from the local dev keys in `.env.example` — never reuse `dev-*` keys outside local development.
+- Production API keys (`API_KEYS` env var) must be at least 32 characters long and distinct from the local development keys — the application refuses to start in production if any built-in `dev-*` key is configured or a key is too short. Production also requires `LLM_API_KEY`; without it, the application would otherwise silently fall back to the deterministic mock provider.
 
 ### Deployment steps (repeatable)
 
@@ -68,8 +71,11 @@ az containerapp create -n enterprise-ai-copilot-api -g rg-enterprise-ai-copilot 
   --registry-server ghcr.io --registry-username <user> --registry-password <gh-token> \
   --cpu 0.25 --memory 0.5Gi --min-replicas 0 --max-replicas 1 \
   --env-vars SQL_SERVER=<fqdn> SQL_DATABASE=SalesAI_DB SQL_TRUSTED_CONNECTION=false \
-             SQL_USERNAME=sqladmin SQL_PASSWORD=<pw> API_KEYS='<json>' APP_ENV=production
+             SQL_USERNAME=sqladmin SQL_PASSWORD=<pw> API_KEYS='<json>' \
+             LLM_API_KEY=<provider-key> APP_ENV=production
 ```
+
+The values in angle brackets are placeholders, not command-ready values. For real deployments, provision `SQL_PASSWORD`, `API_KEYS`, `LLM_API_KEY`, and private-registry credentials through Azure's secret store or Key Vault integration; do not put literal credentials in command history or a checked-in manifest. The `API_KEYS` JSON must contain production credentials only.
 
 **Real issues hit and fixed during this deployment** (see `docs/troubleshooting.md` for full detail):
 - The base setup script's `CREATE DATABASE`/`ALTER DATABASE ... SET SINGLE_USER` prologue isn't supported against an already-provisioned Azure SQL Database — stripped before running.
@@ -102,4 +108,3 @@ The app has no cloud-provider-specific code beyond the Azure deployment above:
 - SQL Server connection pooling (`pool_size=5, max_overflow=5`) should be tuned per replica count to avoid exceeding the database's max connections.
 - Schema cache TTL (`SCHEMA_CACHE_TTL_SECONDS`) trades staleness for reduced metadata query load; increase it in low-change environments.
 - Container Apps `min-replicas 0` means the first request after scale-to-zero has a cold-start delay; combined with the database's own auto-pause, the very first request after a long idle period can take longer than subsequent ones.
-

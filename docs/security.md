@@ -22,7 +22,7 @@ Enforcement is a FastAPI dependency (`require_role(*roles)`) applied per-route v
 
 Verified in `tests/api/test_rbac.py` (19 cases): every role/endpoint combination in the matrix above, plus missing-key and invalid-key rejection.
 
-**Local dev defaults** (`dev-admin-key`/`dev-analyst-key`/`dev-viewer-key`, see `.env.example`) must be overridden with unique secret keys before any shared/production deployment — the config comment says so explicitly.
+**Local dev defaults** (`dev-admin-key`/`dev-analyst-key`/`dev-viewer-key`) must be overridden with unique secret keys before any shared/production deployment. Startup validation rejects those keys and API keys shorter than 32 characters in production, and requires `LLM_API_KEY` so production cannot silently run with the deterministic mock provider.
 
 ## SQL validation (`app/text_to_sql/validator.py`)
 

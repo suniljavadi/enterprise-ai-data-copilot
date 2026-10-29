@@ -51,5 +51,5 @@ def check_database_connection() -> dict:
             connection.execute(text("SELECT 1"))
         return {"status": "ok", "database": get_settings().sql_database}
     except Exception as exc:
-        logger.error("Database health check failed: %s", exc)
+        logger.error("Database health check failed (%s)", exc.__class__.__name__)
         raise DatabaseUnavailableError(f"Cannot reach SQL Server: {exc.__class__.__name__}") from exc

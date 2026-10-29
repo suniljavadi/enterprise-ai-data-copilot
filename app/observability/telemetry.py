@@ -24,7 +24,7 @@ def _safe_execute(sql: str, params: dict, fetch_scalar: bool = False) -> object 
             session.commit()
             return value
     except Exception as exc:
-        logger.warning("Observability write skipped (ai schema likely missing): %s", exc)
+        logger.warning("Observability write skipped (%s)", exc.__class__.__name__)
         return None
 
 

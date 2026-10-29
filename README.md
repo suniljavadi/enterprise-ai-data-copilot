@@ -56,7 +56,7 @@ Key principle enforced throughout: **LLM output is never executed directly.** Ev
 | Vector store | FAISS (`IndexFlatIP`) | Fast, swappable behind a thin interface |
 | LLM | Provider-abstracted (`LLMProvider`) | Mock provider by default (no API key needed); OpenAI-compatible adapter when `LLM_API_KEY` is set |
 | UI | Streamlit | Talks only to the FastAPI backend, no business logic in the UI |
-| Tests | pytest (unit / integration / api / evaluation) | 69+ tests, all passing against the real database |
+| Tests | pytest (unit / integration / API / evaluation) | Unit tests run in CI; database-backed suites require a provisioned SQL Server |
 
 ## Setup
 
@@ -65,10 +65,9 @@ cd enterprise-ai-data-copilot
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env.example .env
 ```
 
-Edit `.env` (see [Environment Variables](#environment-variables) below), then:
+Configure the required environment variables for your environment (see [Environment Variables](#environment-variables) below), then:
 
 ```powershell
 uvicorn app.main:app --reload
@@ -82,7 +81,7 @@ streamlit run frontend/streamlit_app.py
 
 ## Environment Variables
 
-See [.env.example](.env.example). Key ones:
+Key variables:
 
 | Variable | Purpose |
 |---|---|
@@ -92,6 +91,8 @@ See [.env.example](.env.example). Key ones:
 | `SQL_QUERY_TIMEOUT`, `MAX_RESULT_ROWS` | Bound every generated query's execution time and result size |
 | `SCHEMA_CACHE_TTL_SECONDS` | How long schema metadata is cached before re-inspection |
 | `API_KEYS` | JSON map of API key → role (`admin`/`analyst`/`viewer`). Ships with dev-only defaults — override before any shared deployment |
+
+`LLM_API_KEY` is optional for local development (which uses the deterministic mock provider) and required when `APP_ENV=production`. In production, `API_KEYS` entries must be unique credentials at least 32 characters long; development defaults are rejected.
 
 ## SQL Server Configuration
 
@@ -124,7 +125,7 @@ See [docs/security.md](docs/security.md#role-based-access-control-appcoresecurit
 | `analyst` | + raw SQL tools (`/sql/generate`, `/sql/execute`), `/schema`, `/health/database` |
 | `admin` | + data management (`/schema/refresh`, `/rag/ingest`) |
 
-Dev keys (`dev-admin-key`/`dev-analyst-key`/`dev-viewer-key`) are in `.env.example` for local testing only.
+Built-in dev keys (`dev-admin-key`/`dev-analyst-key`/`dev-viewer-key`) are for local testing only and are rejected when `APP_ENV=production`.
 
 ## Evaluation Methodology
 
